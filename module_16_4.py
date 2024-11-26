@@ -21,7 +21,7 @@ async def get_users() -> List[User]:
 @app.post('/user/{username}/{age}')
 async def post_user(user: User) -> str:
     if users:
-        user.id = len(users)
+        user.id = max(users, key=lambda urs: urs.id).id + 1
     else:
         user.id = 1
     users.append(user)
@@ -33,8 +33,8 @@ async def put_user(user_id: Annotated[int, Path(ge=0, le=1000, description="Ente
                     username: Annotated[str, Path(min_length=5, max_length=30, description="Enter username", example="UrbanUser")],
                     age: Annotated[int, Path(ge=18, le=120, description="Enter age", example="24")]) -> str:
     try:
-        users[user_id].username = username
-        users[user_id].age = age
+        users[user_id - 1].username = username
+        users[user_id - 1].age = age
     except IndexError:
         raise HTTPException(status_code=404, detail="User was not found")
     return users[user_id]
@@ -43,6 +43,6 @@ async def put_user(user_id: Annotated[int, Path(ge=0, le=1000, description="Ente
 @app.delete('/user/{user_id}')
 async def delete_user(user_id: Annotated[int, Path(ge=0, le=1000, description="Enter user_id", example='10')]) -> str:
     try:
-        return users.pop(user_id)
+        return users.pop(user_id - 1)
     except IndexError:
         raise HTTPException(status_code=404, detail="User was not found")
